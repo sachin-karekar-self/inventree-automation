@@ -118,7 +118,68 @@ same call: certify the revenue-critical spine first, expand breadth iteratively.
 | 20 | `CategoryPage.expect_part_listed` / `open_part` | Assumed part names render as links in the category table | They render as plain cell text: containment assertion on the table, row-click for navigation |
 | 21 | crossfunctional test — teardown | Flow left the UI-created part, its stock item, and the parameter template behind (violates the clean-up rule) | Added `try/finally` API cleanup: stock items → part (deactivate-then-delete) → parameter template |
 
-## 5. Submission tree
+## 5. Coverage matrix — brief requirements → manual cases → automation
+
+> "Automated" = a test in `automation/` directly exercises the behaviour.
+> **Partial** = the core positive/negative path is automated but sibling variations remain manual-only (listed in Notes).
+
+### Phase 1 — UI
+
+| Brief requirement | Manual case ID(s) | Automated | Notes |
+|---|---|---|---|
+| Part creation — manual entry | UI-PART-001..009 | Partial | 001 (create) and 004 (empty-name validation) automated; permission/duplicate/boundary variants manual |
+| Part creation — import flow | UI-PART-010..012 | No | Manual-only by prioritization (P1 automation slice) |
+| Tab: Stock | UI-PART-021, 022 | Partial | Stock creation + listing automated in cross-functional flow; export manual |
+| Tab: BOM | UI-PART-023 | Partial | Negative half automated (hidden for non-assembly); positive half manual |
+| Tab: Allocated | UI-PART-024 | No | Manual-only |
+| Tab: Build Orders | UI-PART-026 | No | Manual-only |
+| Tab: Parameters | UI-PART-070..073 | Partial | Template seeding + add-parameter automated in cross-functional flow (071); template mgmt manual |
+| Tab: Variants | UI-PART-050..053 | No | Manual-only |
+| Tab: Revisions | UI-PART-080..087 | No (UI) | Revision behaviour automated at API layer instead (API-PART-050..053) |
+| Tab: Attachments | UI-PART-027 | No | Manual-only |
+| Tab: Related Parts | UI-PART-028 | No | Manual-only |
+| Tab: Test Templates | UI-PART-029 | No | Manual-only |
+| Categories — hierarchy | UI-PART-060 | Partial | Hierarchy automated at API layer (API-PART-041); cascading UI display manual |
+| Categories — part-list filtering & navigation | UI-PART-061, 062, 065 | Partial | Part-appears-in-category-view automated in cross-functional flow; filter controls manual |
+| Categories — parametric tables | UI-PART-063, 064 | No | Manual-only |
+| Attribute: Virtual | UI-PART-040, 041 | No | Manual-only |
+| Attribute: Template | UI-PART-050, 085 | No | Manual-only |
+| Attribute: Assembly | UI-PART-023, 026, 086 | Partial | BOM-tab gating (negative) automated |
+| Attribute: Component | UI-PART-024, 025, 045 | No | Manual-only |
+| Attribute: Trackable | UI-PART-042, 052 | No | Manual-only |
+| Attribute: Purchaseable | UI-PART-043 | No | Manual-only |
+| Attribute: Salable | UI-PART-024, 030, 045 | No | Manual-only |
+| Attribute: Active/Inactive | UI-PART-044, 091 | Partial | Deactivate-then-delete rule automated at API layer (API-PART-015/016) and exercised by every teardown; UI restrictions manual |
+| Units of measure | UI-PART-002, 009 | Partial | Units persistence automated at API layer (API-PART-011); UI default/custom display manual |
+| Revisions — creation | UI-PART-080, 081 | Partial | Automated at API layer (API-PART-050); UI flow manual |
+| Revisions — circular reference prevented | UI-PART-084 | Partial | Automated at API layer (API-PART-051) |
+| Revisions — unique revision codes | UI-PART-082 | Partial | Automated at API layer (API-PART-052) |
+| Revisions — template restriction | UI-PART-085 | No | Manual-only (UI-PART-085, API-PART-054) |
+| Revisions — revision-of-revision prevention | UI-PART-083 | Partial | Automated at API layer (API-PART-053) — instance **allows** it; documented divergence (corrections log #2) |
+| Negative: duplicate IPN | UI-PART-006 | Partial | Setting-aware assertion automated at API layer (API-PART-035); UI form path manual |
+| Negative: inactive part restrictions | UI-PART-044, 091 | Partial | API-PART-015/016 automated; UI-side restrictions manual |
+
+### Phase 2 — API
+
+| Brief requirement | Manual case ID(s) | Automated | Notes |
+|---|---|---|---|
+| Parts CRUD | API-PART-010..017 | Partial | 7 of 8 automated; PUT full-update (014) manual-only |
+| Part Categories CRUD | API-PART-040..045 | Partial | Create/subcategory/update/circular-parent/assign automated; delete-with-children (044) manual-only |
+| Filtering | API-PART-022, 023, 027 | Yes | Category, active, invalid-value all automated |
+| Pagination | API-PART-020, 021, 026 | Partial | Envelope + offset-disjointness automated; boundary limits (026, P3) manual |
+| Search & ordering | API-PART-024, 025 | Yes | |
+| Validation: required fields | API-PART-030 | Yes | |
+| Validation: max length | API-PART-031, 032 | Yes | Parametrized 100/101-char IPN boundary |
+| Validation: nullable | API-PART-034 | No | Manual-only (P3) |
+| Validation: read-only fields | API-PART-033 | Yes | |
+| Relational integrity | API-PART-041, 043, 045, 046 | Partial | Parent link, circular-tree rejection, part↔category automated; default-location chain (046, P3) manual |
+| Edge: invalid payloads | API-PART-027, 037 | Yes | Type-invalid and malformed-filter, asserting 4xx never 5xx |
+| Edge: unauthorised access | API-PART-001..004 | Partial | Token/no-auth/bad-token automated; role-restricted 403 (004) manual (needs a second, limited user) |
+| Edge: conflict scenarios | API-PART-036, 043, 051..053 | Yes | Name+revision uniqueness, circular refs, duplicate revision codes all automated |
+
+**True gaps (required item with no manual case): none** — every item enumerated in the brief maps to at least one manual case.
+
+## 6. Submission tree
 
 ```
 submission/
