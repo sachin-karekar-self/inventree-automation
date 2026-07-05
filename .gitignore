@@ -6,6 +6,7 @@ InvenTree/
 __pycache__/
 *.pyc
 .pytest_cache/
+.coverage
 
 # Playwright session state (generated at test runtime)
 .auth-state.json
