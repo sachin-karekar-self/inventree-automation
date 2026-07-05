@@ -136,14 +136,25 @@ def test_revision_lifecycle_and_constraints(client, part_factory, default_catego
         )
     rev_pk = first.json()["pk"]
 
+    nested_pk = None
     try:
         # API-PART-052: duplicate revision code for same parent
         dup = make_revision(parent["pk"], "B")
         assert dup.status_code == 400, f"Duplicate revision code accepted: {dup.text}"
 
-        # API-PART-053: revision of a revision
+        # API-PART-053: revision of a revision.
+        # The Parts docs state a revision cannot itself have revisions, but InvenTree
+        # 1.4.1 deliberately allows this at the model/API level (no nested-revision
+        # check in Part.validate_revision; upstream unit test part/test_part.py
+        # "Ensure we can make a revision of a revision" asserts success). We assert
+        # the actual API behaviour; the docs divergence is logged in README.md.
         nested = make_revision(rev_pk, "C")
-        assert nested.status_code == 400, f"Revision-of-revision accepted: {nested.text}"
+        assert nested.status_code == 201, (
+            f"Nested revision unexpectedly rejected ({nested.status_code}): {nested.text}"
+        )
+        nested_pk = nested.json()["pk"]
     finally:
-        client.patch(api(f"/api/part/{rev_pk}/"), json={"active": False}, timeout=30)
-        client.delete(api(f"/api/part/{rev_pk}/"), timeout=30)
+        for pk in (nested_pk, rev_pk):
+            if pk is not None:
+                client.patch(api(f"/api/part/{pk}/"), json={"active": False}, timeout=30)
+                client.delete(api(f"/api/part/{pk}/"), timeout=30)

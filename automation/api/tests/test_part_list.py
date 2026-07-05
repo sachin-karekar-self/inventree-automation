@@ -41,7 +41,8 @@ def test_filter_by_category(client, part_factory, category_factory):
     cat = category_factory()
     inside = part_factory(category=cat["pk"])
     part_factory()  # a part in the default suite category (outside)
-    resp = client.get(api("/api/part/"), params={"category": cat["pk"]}, timeout=30)
+    # limit is required for the paginated envelope: without it InvenTree returns a plain array
+    resp = client.get(api("/api/part/"), params={"category": cat["pk"], "limit": 100}, timeout=30)
     assert resp.status_code == 200
     results = assert_paginated(resp.json())
     pks = {r["pk"] for r in results}
@@ -54,7 +55,7 @@ def test_filter_by_active_false(client, part_factory):
     """API-PART-023: active=false returns only inactive parts."""
     part = part_factory()
     client.patch(api(f"/api/part/{part['pk']}/"), json={"active": False}, timeout=30)
-    resp = client.get(api("/api/part/"), params={"active": "false"}, timeout=30)
+    resp = client.get(api("/api/part/"), params={"active": "false", "limit": 100}, timeout=30)
     results = assert_paginated(resp.json())
     assert all(r["active"] is False for r in results)
     assert part["pk"] in {r["pk"] for r in results}
@@ -65,7 +66,7 @@ def test_search_by_unique_fragment(client, part_factory):
     """API-PART-024: search finds the seeded part by its unique name fragment."""
     fragment = unique("Searchable")
     part = part_factory(name=fragment)
-    resp = client.get(api("/api/part/"), params={"search": fragment}, timeout=30)
+    resp = client.get(api("/api/part/"), params={"search": fragment, "limit": 100}, timeout=30)
     results = assert_paginated(resp.json())
     assert part["pk"] in {r["pk"] for r in results}
 

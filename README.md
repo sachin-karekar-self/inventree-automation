@@ -96,7 +96,8 @@ same call: certify the revenue-critical spine first, expand breadth iteratively.
 
 | # | Artefact | What was wrong | Correction |
 |---|---|---|---|
-| 1 | *(populated during the recorded live session)* | | |
+| 1 | `automation/api/tests/test_part_list.py` (filter-by-category, active=false, search tests) | Assumed `/api/part/` always returns the paginated `count/next/previous/results` envelope; InvenTree returns a plain JSON array when `limit` is omitted, so `assert_paginated` failed | Added explicit `limit=100` to the three list requests so the envelope assertion matches documented pagination behaviour |
+| 2 | `automation/api/tests/test_categories_and_edges.py::test_revision_lifecycle_and_constraints` (API-PART-053) | Asserted revision-of-a-revision is rejected (400) per Parts docs; InvenTree 1.4.1 deliberately accepts it (no nested-revision check in `Part.validate_revision`; upstream unit test asserts success) — a docs-vs-implementation divergence, not a test-environment fluke | Changed assertion to expect 201 with cleanup of the nested part, and documented the divergence in the test body and this log |
 
 ## 5. Submission tree
 
