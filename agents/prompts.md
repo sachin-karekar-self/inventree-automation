@@ -135,6 +135,84 @@ final review.
 
 ---
 
+## Phase 5 — Refinement prompts as actually issued
+
+> The prompts above are the generation plan. This section records the refinement
+> instructions actually issued while driving the suites green against the live instance —
+> condensed to their operative content. Every fix they produced is a numbered row in
+> README.md → "Agent corrections log". This sequence is the script for the graded
+> refinement segment of the recording.
+
+### P5.1 — API suite: run, diagnose, fix, log
+```
+Run the API suite. For every failure, diagnose whether the fault is in the test or a
+genuine finding about the instance, fix the test where appropriate, re-run until green,
+and append one line per fix to the "Agent corrections log" table in README.md.
+```
+*(Produced corrections #1–2, including the docs-vs-implementation divergence on nested revisions.)*
+
+### P5.2 — LoginPage from operator-captured locators
+```
+I've captured the real login locators from the live instance using Playwright codegen
+[codegen script pasted]. Update LoginPage and the login route to use them and remove the
+resolved # VERIFY-LIVE tags. I have NOT shared locators for the part form fill or edit
+actions — probe the live application yourself to get those. Then run
+pytest -m smoke -v --headed and log each locator change.
+```
+
+### P5.3 — Live-DOM probing ground rule
+```
+If the Playwright MCP server isn't available, write and run a small throwaway Playwright
+Python script to inspect the DOM, then delete it. Walk the actual flow in the browser,
+find the true selectors, iterate until the test passes, and log every correction.
+```
+*(This became the standing method for all remaining UI fixes: probe → fix page object → re-run.)*
+
+### P5.4 — CRUD flows
+```
+Fix the CRUD UI flows: create part with required fields, empty-name validation, edit
+description. Inspect the Create Part form and category combobox live; seed prerequisite
+data via the API fixtures; discover how the validation error actually surfaces.
+Run pytest -m crud -v --headed until green; log corrections.
+```
+
+### P5.5 — Negative flow
+```
+Fix the negative test: a non-assembly part must NOT show the BOM tab. Inspect how the tab
+strip is rendered and confirm the tab is genuinely absent (not just misnamed) so the
+negative assertion cannot pass vacuously. Run pytest -m negative -v --headed; log corrections.
+```
+*(Caught correction #12: the tab is named "Bill of Materials", so the old check for "BOM" passed vacuously.)*
+
+### P5.6 — Mandatory cross-functional flow
+```
+Fix the cross-functional flow: create part via UI → add parameter → create stock → verify
+in category view. Walk the full flow in the browser first; seed the parameter TEMPLATE via
+the API; if any step has required fields the test doesn't fill, add them with valid
+discovered values and note it. Run pytest -m crossfunctional -v --headed until green;
+log every correction.
+```
+*(Produced corrections #15–21, including the genericised parameter-template endpoint and the stock-create redirect.)*
+
+### P5.7 — Final verification, honest and green
+```
+Run the entire UI suite headed, then the entire API suite. For any test that can't pass
+due to a genuine InvenTree behavioural difference (not a locator issue), don't force it —
+mark it clearly and note the reason in the README so the suite stays honest and green.
+Confirm the corrections log is fully populated.
+```
+
+### P5.8 — Packaging & hardening
+```
+Finalize: .gitignore for the AUT clone and generated artifacts; make http://localhost the
+code default so no env var is required; verify the tree matches the required layout.
+Audit test coverage against the assessment brief and add the coverage matrix to the README.
+Add pytest-cov and record the (illustrative) coverage summary. Scan the full git history
+to confirm no session tokens or secrets were ever committed.
+```
+
+---
+
 ## Notes on tool usage
 - **Claude (chat)** was used for upfront analysis: ingesting the assessment brief and the
   InvenTree documentation, designing this prompt pack, the system instructions, and the
