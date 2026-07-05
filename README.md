@@ -179,6 +179,32 @@ same call: certify the revenue-critical spine first, expand breadth iteratively.
 
 **True gaps (required item with no manual case): none** — every item enumerated in the brief maps to at least one manual case.
 
+### Code coverage of the API suite (illustrative)
+
+`pytest --cov --cov-report=term-missing` over `automation/api` (33/33 passing against the
+live instance). Note what this measures: coverage of the **automation code itself** — i.e.
+that no test/fixture/helper logic is dead — not coverage of InvenTree server code, which
+runs in a separate container. It is illustrative of test reach, not a hard target.
+
+```
+Name                                 Stmts   Miss  Cover   Missing
+------------------------------------------------------------------
+conftest.py                             69      1    99%   125
+tests/test_categories_and_edges.py      76      1    99%   133
+tests/test_field_validation.py          62      1    98%   87
+tests/test_part_crud.py                 50      0   100%
+tests/test_part_list.py                 61      0   100%
+utils/schemas.py                        16      0   100%
+------------------------------------------------------------------
+TOTAL                                  334      3    99%
+```
+
+The 3 uncovered lines are environment-conditional branches that only execute on
+deployments configured differently from this one: the fallback when a global setting
+can't be read (`conftest.py:125`), the `xfail` guard for instances with revisions
+disabled (`test_categories_and_edges.py:133`), and the reject-arm of the setting-aware
+duplicate-IPN assertion (`test_field_validation.py:87`).
+
 ## 6. Submission tree
 
 ```
