@@ -16,7 +16,7 @@ import uuid
 import pytest
 import requests
 
-BASE_URL = os.environ.get("INVENTREE_URL", "http://localhost:8000").rstrip("/")
+BASE_URL = os.environ.get("INVENTREE_URL", "http://localhost").rstrip("/")
 USER = os.environ.get("INVENTREE_USER", "admin")
 PASSWORD = os.environ.get("INVENTREE_PASSWORD", "inventree")
 
@@ -77,8 +77,8 @@ def seeded_part(api_client: requests.Session, seed_category: dict):
 def authenticated_state(browser) -> str:
     """Login once via the UI; persist storage state for all tests.
 
-    # VERIFY-LIVE: login route and field locators must be confirmed against the
-    # running instance's platform UI (see pages/login_page.py).
+    Login route and locators confirmed against the live platform UI
+    (see pages/part_pages.py::LoginPage).
     """
     from pages.login_page import LoginPage
 

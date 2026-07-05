@@ -1,0 +1,11 @@
+# Application under test — cloned locally, not part of the deliverable
+InvenTree/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Playwright session state (generated at test runtime)
+.auth-state.json

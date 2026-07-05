@@ -17,7 +17,7 @@ docker compose up -d
 
 ### Environment (both suites read the same variables)
 ```bash
-export INVENTREE_URL=http://localhost:8000   # adjust to your compose port
+export INVENTREE_URL=http://localhost   # compose serves via Caddy proxy on port 80
 export INVENTREE_USER=admin
 export INVENTREE_PASSWORD=inventree
 ```
@@ -98,6 +98,25 @@ same call: certify the revenue-critical spine first, expand breadth iteratively.
 |---|---|---|---|
 | 1 | `automation/api/tests/test_part_list.py` (filter-by-category, active=false, search tests) | Assumed `/api/part/` always returns the paginated `count/next/previous/results` envelope; InvenTree returns a plain JSON array when `limit` is omitted, so `assert_paginated` failed | Added explicit `limit=100` to the three list requests so the envelope assertion matches documented pagination behaviour |
 | 2 | `automation/api/tests/test_categories_and_edges.py::test_revision_lifecycle_and_constraints` (API-PART-053) | Asserted revision-of-a-revision is rejected (400) per Parts docs; InvenTree 1.4.1 deliberately accepts it (no nested-revision check in `Part.validate_revision`; upstream unit test asserts success) — a docs-vs-implementation divergence, not a test-environment fluke | Changed assertion to expect 201 with cleanup of the nested part, and documented the divergence in the test body and this log |
+| 3 | `automation/ui/pages/part_pages.py::LoginPage` | Doc-guessed `get_by_label("Username"/"Password")` and button `"Log in"` — fields carry aria-labels, not visible labels | Real locators from operator codegen: `get_by_role("textbox", name="login-username"/"login-password")`, button `"Log In"` (single click suffices; codegen's double click was an artifact) |
+| 4 | `PartsIndexPage.open` route | `/web/part/` is not a platform-UI route — it bounces to `/web/logged-in` | Parts table lives at `/web/part/category/index/parts` (verified via nav link and direct goto with storage state) |
+| 5 | `PartsIndexPage.open` ready-check | Waited for a `"Parts"` heading that the page never renders | Readiness = `get_by_label("panel-tabs-partcategory")` tablist visible |
+| 6 | `PartsIndexPage.open_create_part_form` | Guessed button `"Add Parts"` / menuitem `"Create Part"` | Live aria-labels: button `action-menu-add-parts`, menuitem `action-menu-add-parts-create-part` |
+| 7 | `PartCreateForm` text fields | Guessed `get_by_label("Name"/"Description"/"IPN")` | Dialog-scoped `get_by_role("textbox", name="text-field-name"/"text-field-description"/"text-field-IPN")` — the form exposes stable `text-field-*`/`boolean-field-*` aria-labels |
+| 8 | `PartCreateForm` category select | Guessed `get_by_label("Category")`; codegen offered only a brittle `.css-z6y6gf` chain | React-select input has aria-label `related-field-category` (combobox role): click, type fragment, pick `get_by_role("option")` |
+| 9 | `PartCreateForm.expect_field_error` | Located field by visible label (unresolvable) | `text-field-<field>` input gets `aria-invalid="true"` plus a Mantine error element — verified live on empty-name submit |
+| 10 | `PartDetailPage.expect_loaded` | Expected a heading with the part name; detail view renders no heading element | Readiness = `panel-tabs-part` tablist visible + part name text visible |
+| 11 | `PartDetailPage.tab` | Unscoped `get_by_role("tab")` — tab names like "Stock" collide with main-navigation tabs | Scoped to `get_by_label("panel-tabs-part")`; TABS list replaced with live names from an all-flags probe part |
+| 12 | `test_bom_tab_hidden_for_non_assembly` | Checked for a tab named `"BOM"`, which never exists — the negative assertion passed vacuously | Real tab name is `"Bill of Materials"` (confirmed present on an assembly-flagged part, absent otherwise) |
+| 13 | `PartDetailPage.edit_part` | Guessed `"Part actions"` button / `"Edit"` menuitem and visible-label fields | Live aria-labels: `action-menu-part-actions` → `action-menu-part-actions-edit`; dialog fields via `text-field-<api-field>`; waits for modal close on success |
+| 14 | `test_edit_part_description` assertion | Non-waiting `.count()` immediately after `reload()` raced the SPA re-render and failed intermittently | Replaced with `expect(...).to_be_visible()` per the explicit-wait rule |
+| 15 | crossfunctional test — parameter template seeding | Seeded via `/api/part/parameter/template/`, which no longer exists in InvenTree 1.4.1 (404) — parameters were genericised | Now posts to `/api/parameter/template/` with the required `model_type: "part"` |
+| 16 | `PartDetailPage.add_parameter` | Guessed `"Add parameter"` button and `"Parameter template"`/`"Value"` labels | Live path: `action-menu-add-parameters` → menuitem `action-menu-add-parameters-create-parameter`; dialog fields `related-field-template` (combobox, type-ahead + option) and `text-field-data` |
+| 17 | `PartDetailPage.create_stock` | Guessed `"Add Stock"` button and `"Quantity"` label; assumed the app stays on the part page after submit | Live: `action-button-add-stock-item` → dialog field `number-field-quantity` (part comes pre-selected; no other required fields). Submitting navigates to the NEW stock item's detail page — the page object asserts that redirect, then `go_back()`s to the part page so follow-up assertions work |
+| 18 | `PartDetailPage.expect_parameter` / `expect_in_stock` | Row/table locators unverified; `get_by_role("table")` could be ambiguous | Row matched by template name with value containment; table assertions pinned to `.first` with explicit timeouts — verified against the live parameter and stock tables |
+| 19 | `CategoryPage.open` | Asserted an unscoped `tab "Parts"` — ambiguous with the main-navigation "Parts" tab — and never selected the tab | Waits for `panel-tabs-partcategory`, then clicks its "Parts" tab (route `/web/part/category/<pk>/` redirects to `/details`, parts list is not the default tab) |
+| 20 | `CategoryPage.expect_part_listed` / `open_part` | Assumed part names render as links in the category table | They render as plain cell text: containment assertion on the table, row-click for navigation |
+| 21 | crossfunctional test — teardown | Flow left the UI-created part, its stock item, and the parameter template behind (violates the clean-up rule) | Added `try/finally` API cleanup: stock items → part (deactivate-then-delete) → parameter template |
 
 ## 5. Submission tree
 

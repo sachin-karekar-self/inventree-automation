@@ -1,7 +1,8 @@
 """Shared fixtures for the InvenTree Parts API suite.
 
 Environment:
-    INVENTREE_URL       base URL of running instance (default http://localhost:8000)
+    INVENTREE_URL       base URL of running instance (default http://localhost — the
+                        compose stack serves via the Caddy proxy on port 80)
     INVENTREE_USER      admin username (default admin)
     INVENTREE_PASSWORD  admin password (default inventree)
 """
@@ -14,7 +15,7 @@ from typing import Any, Callable
 import pytest
 import requests
 
-BASE_URL = os.environ.get("INVENTREE_URL", "http://localhost:8000").rstrip("/")
+BASE_URL = os.environ.get("INVENTREE_URL", "http://localhost").rstrip("/")
 USER = os.environ.get("INVENTREE_USER", "admin")
 PASSWORD = os.environ.get("INVENTREE_PASSWORD", "inventree")
 
