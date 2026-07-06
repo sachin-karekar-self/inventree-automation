@@ -7,5 +7,5 @@ per-file limit, so it is linked rather than committed:
 
 **▶ Watch:** https://drive.google.com/file/d/1qIx9QTXQ7n30WYHGHevRqdVB8N0Hj9dj/view?usp=sharing
 
-in this folder; the prompts issued on camera are `agents/prompts.md`
+The prompts issued on camera are in `agents/prompts.md`
 (Phase 5 = the refinement segment).
