@@ -3,6 +3,8 @@
 
 **Candidate:** Sachin · **Agent stack:** Claude (chat) + Claude Code · **Frameworks:** pytest + requests (API), Playwright Python (UI)
 
+**▶ Video walkthrough:** [recording on Google Drive](https://drive.google.com/file/d/1qIx9QTXQ7n30WYHGHevRqdVB8N0Hj9dj/view?usp=sharing) — generation, execution, and live refinement (see `video/recording-link.md`)
+
 ---
 
 ## 1. Setup
@@ -221,4 +223,5 @@ submission/
 │   ├── api/                       ← pytest + requests (runnable; see §1)
 │   └── ui/                        ← Playwright Python, POM (runnable; see §1)
 └── video/
+    └── recording-link.md          ← Google Drive link to the final recording
 ```

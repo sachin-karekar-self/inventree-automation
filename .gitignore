@@ -10,3 +10,6 @@ __pycache__/
 
 # Playwright session state (generated at test runtime)
 .auth-state.json
+
+# macOS
+.DS_Store
